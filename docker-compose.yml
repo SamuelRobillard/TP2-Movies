@@ -1,0 +1,62 @@
+services:
+
+
+  mongodb:
+    image: mongo:8.0.6
+    ports:
+      - "27017:27017"
+    networks:
+      - movies-network
+    volumes:
+      - db:/data/db
+      - ./movies-backend/mongo-seed:/docker-entrypoint-initdb.d
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    
+
+
+#docker-entrypoint-initdb.d
+# tous les scripts dedans sont exécutés au démarage
+
+
+
+
+  backend:
+      image: samuelrobillard/tp2-6222321-2383528-backend:v1
+      build:
+        context: ./movies-backend
+      ports:
+        - "8080:8080"
+      networks:
+        - movies-network
+      depends_on:
+        - mongodb
+      environment:
+        - SPRING_DATA_MONGODB_URI=mongodb://root:123456@mongodb:27017/movie-api-db?authSource=admin
+        - SERVER_PORT=8080
+
+
+
+
+
+
+
+  frontend:
+      image: samuelrobillard/tp2-6222321-2383528-frontend:v1
+      build:
+        context: ./movies-frontend
+      ports:
+        - "7777:80"
+      depends_on:
+        - backend
+      networks:
+        - movies-network
+
+
+volumes:
+ db:
+
+networks:
+  movies-network:
+    driver: bridge
